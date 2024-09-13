@@ -13,6 +13,7 @@ SOURCES = $(SRC_DIR)/pixel_binning_twice.c \
           $(SRC_DIR)/smoothing.c \
           $(SRC_DIR)/pixel_binning_quatro.c \
           $(SRC_DIR)/denoising.c \
+          $(SRC_DIR)/gamma_correction.c \
 
 # Compiler dan opsi kompilasi
 CC = gcc

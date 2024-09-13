@@ -3,6 +3,7 @@
 #include "smoothing.h"
 #include "unsharp_masking.h"
 #include "denoising.h"
+#include "gamma_correction.h"
 
 void upscale_2x2(int* input, int width, int height, int* output) {
     for (int i = 0; i < height; i++) {
@@ -31,6 +32,9 @@ void upscale_2x2(int* input, int width, int height, int* output) {
 
     // Smoothing
     apply_smoothing(output, width * 2, height * 2);
+
+    //Gamma Correction
+     apply_gamma_correction(output, width * 2, height * 2, 2.2f);  // 2.2 adalah nilai gamma umum
 
     // Sharpening
     apply_unsharp_masking(output, width * 2, height * 2, 1.0, 1.5);
