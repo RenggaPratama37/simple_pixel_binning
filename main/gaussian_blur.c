@@ -1,55 +1,80 @@
 #include "gaussian_blur.h"
 #include <stdlib.h>
+#include <math.h>
 
-// Kernel Gaussian 3x3
-const float gaussian_kernel[3][3] = {
-    {1.0 / 16, 2.0 / 16, 1.0 / 16},
-    {2.0 / 16, 4.0 / 16, 2.0 / 16},
-    {1.0 / 16, 2.0 / 16, 1.0 / 16}
-};
+// Fungsi untuk membuat kernel Gaussian
+void generate_gaussian_kernel(float **kernel, int *size, float sigma) {
+    int ksize = (int)ceil(6 * sigma);
+    if (ksize % 2 == 0) ksize++;
+    *size = ksize;
+    
+    *kernel = (float*)malloc(ksize * ksize * sizeof(float));
 
-void apply_gaussian_blur(int* pixels, int width, int height) {
+    float sum = 0.0f;
+    int half = ksize / 2;
+    float s2 = sigma * sigma;
+    
+    for (int y = -half; y <= half; y++) {
+        for (int x = -half; x <= half; x++) {
+            float value = expf(-(x*x + y*y) / (2 * s2)) / (M_PI * 2 * s2);
+            (*kernel)[(y + half) * ksize + (x + half)] = value;
+            sum += value;
+        }
+    }
+    
+    for (int i = 0; i < ksize * ksize; i++) {
+        (*kernel)[i] /= sum;
+    }
+}
+
+// Fungsi untuk menerapkan Gaussian blur
+void apply_gaussian_blur(int* pixels, int width, int height, float sigma) {
+    float* gaussian_kernel;
+    int kernel_size;
+    generate_gaussian_kernel(&gaussian_kernel, &kernel_size, sigma);
+    
+    int half = kernel_size / 2;
     int* temp = (int*)malloc(width * height * sizeof(int));
 
-    for (int y = 1; y < height - 1; y++) {
-        for (int x = 1; x < width - 1; x++) {
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
             float sumRed = 0, sumGreen = 0, sumBlue = 0;
 
-            // Apply Gaussian kernel to the current pixel and its neighbors
-            for (int j = -1; j <= 1; j++) {
-                for (int i = -1; i <= 1; i++) {
-                    int neighborIndex = (y + j) * width + (x + i);
-                    int neighborPixel = pixels[neighborIndex];
+            for (int j = -half; j <= half; j++) {
+                for (int i = -half; i <= half; i++) {
+                    int ny = y + j;
+                    int nx = x + i;
+                    
+                    if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+                        int neighborIndex = ny * width + nx;
+                        int neighborPixel = pixels[neighborIndex];
 
-                    // Extract RGB components from the neighbor pixel
-                    int red = (neighborPixel >> 16) & 0xFF;
-                    int green = (neighborPixel >> 8) & 0xFF;
-                    int blue = neighborPixel & 0xFF;
+                        int red = (neighborPixel >> 16) & 0xFF;
+                        int green = (neighborPixel >> 8) & 0xFF;
+                        int blue = neighborPixel & 0xFF;
 
-                    // Apply Gaussian kernel weight
-                    float kernelValue = gaussian_kernel[j + 1][i + 1];
-                    sumRed += red * kernelValue;
-                    sumGreen += green * kernelValue;
-                    sumBlue += blue * kernelValue;
+                        float kernelValue = gaussian_kernel[(j + half) * kernel_size + (i + half)];
+                        sumRed += red * kernelValue;
+                        sumGreen += green * kernelValue;
+                        sumBlue += blue * kernelValue;
+                    }
                 }
             }
 
-            // Set the blurred pixel back
-            int newRed = (int)sumRed;
-            int newGreen = (int)sumGreen;
-            int newBlue = (int)sumBlue;
+            int newRed = (int)fminf(fmaxf(sumRed, 0), 255);
+            int newGreen = (int)fminf(fmaxf(sumGreen, 0), 255);
+            int newBlue = (int)fminf(fmaxf(sumBlue, 0), 255);
 
-            // Recombine RGB components into one pixel
             temp[y * width + x] = (newRed << 16) | (newGreen << 8) | newBlue;
         }
     }
 
-    // Copy the blurred pixels back to the original array
-    for (int y = 1; y < height - 1; y++) {
-        for (int x = 1; x < width - 1; x++) {
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
             pixels[y * width + x] = temp[y * width + x];
         }
     }
 
     free(temp);
+    free(gaussian_kernel);
 }

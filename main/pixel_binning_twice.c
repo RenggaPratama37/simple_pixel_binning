@@ -28,16 +28,14 @@ void upscale_2x2(int* input, int width, int height, int* output) {
     apply_median_filter(output, width * 2, height * 2, 3);
 
     // Gaussian Blur
-    apply_gaussian_blur(output, width * 2, height * 2);
+    apply_gaussian_blur(output, width * 2, height * 2, 1.0f);  // Tambahkan nilai sigma
 
     // Smoothing
     apply_smoothing(output, width * 2, height * 2);
 
-    //Gamma Correction
-     apply_gamma_correction(output, width * 2, height * 2, 2.2f);  // 2.2 adalah nilai gamma umum
+    // Gamma Correction
+    apply_gamma_correction(output, width * 2, height * 2, 2.2f);  // 2.2 adalah nilai gamma umum
 
     // Sharpening
     apply_unsharp_masking(output, width * 2, height * 2, 1.0, 1.5);
-
-
 }

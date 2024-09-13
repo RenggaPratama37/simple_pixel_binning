@@ -42,12 +42,12 @@ void calculate_sharpening_diff(int* original, int* blurred, int* output, int wid
     }
 }
 
-void apply_unsharp_masking(int* pixels, int width, int height, float sigma, float amount) {
+void apply_unsharp_masking(int* pixels, int width, int height, float amount, float radius) {
     int* blurred = (int*)malloc(width * height * sizeof(int));
     int* sharpened = (int*)malloc(width * height * sizeof(int));
 
     // Apply Gaussian blur to create the blurred image
-    apply_gaussian_blur(pixels, width, height);
+    apply_gaussian_blur(pixels, width, height, radius);
 
     // Calculate the difference between the original and blurred image
     calculate_sharpening_diff(pixels, blurred, sharpened, width, height);
