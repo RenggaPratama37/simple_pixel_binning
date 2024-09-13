@@ -1,4 +1,4 @@
-#include "PixelBinning.h"
+#include "pixel_binning_jni.h"
 #include <jni.h>
 
 JNIEXPORT void JNICALL Java_project_PixelBinning_upscale2x2

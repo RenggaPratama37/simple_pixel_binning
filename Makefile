@@ -7,7 +7,7 @@ INCLUDE_DIR = include
 
 # File sumber C yang akan dikompilasi
 SOURCES = $(SRC_DIR)/pixel_binning_twice.c \
-          $(SRC_DIR)/PixelBinning.c \
+          $(SRC_DIR)/pixel_binning_jni.c \
           $(SRC_DIR)/gaussian_blur.c \
           $(SRC_DIR)/unsharp_masking.c \
           $(SRC_DIR)/smoothing.c \
