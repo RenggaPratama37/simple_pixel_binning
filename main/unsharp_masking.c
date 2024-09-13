@@ -4,7 +4,7 @@
 #include <math.h>
 
 // Helper function to calculate the difference between original and blurred image
-void calculate_sharpening_diff(int* original, int* blurred, int* output, int width, int height) {
+void calculate_sharpening_diff(int* original, int* blurred, int* output, int width, int height, float amount) {
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             int index = y * width + x;
@@ -26,10 +26,10 @@ void calculate_sharpening_diff(int* original, int* blurred, int* output, int wid
             int diffGreen = origGreen - blurGreen;
             int diffBlue = origBlue - blurBlue;
 
-            // Enhance the difference
-            int newRed = origRed + (int)(diffRed * 1.5);
-            int newGreen = origGreen + (int)(diffGreen * 1.5);
-            int newBlue = origBlue + (int)(diffBlue * 1.5);
+            // Enhance the difference based on the amount parameter
+            int newRed = origRed + (int)(diffRed * amount);
+            int newGreen = origGreen + (int)(diffGreen * amount);
+            int newBlue = origBlue + (int)(diffBlue * amount);
 
             // Clamp values to be within the 0-255 range
             newRed = (int)fmaxf(0, fminf(255, newRed));
@@ -42,15 +42,20 @@ void calculate_sharpening_diff(int* original, int* blurred, int* output, int wid
     }
 }
 
-void apply_unsharp_masking(int* pixels, int width, int height, float amount, float radius) {
+void apply_unsharp_masking(int* pixels, int width, int height, float sigma, float amount) {
     int* blurred = (int*)malloc(width * height * sizeof(int));
     int* sharpened = (int*)malloc(width * height * sizeof(int));
 
     // Apply Gaussian blur to create the blurred image
-    apply_gaussian_blur(pixels, width, height, radius);
+    apply_gaussian_blur(pixels, width, height, sigma);
+
+    // Copy the original image to the `blurred` array before modification
+    for (int i = 0; i < width * height; i++) {
+        blurred[i] = pixels[i];
+    }
 
     // Calculate the difference between the original and blurred image
-    calculate_sharpening_diff(pixels, blurred, sharpened, width, height);
+    calculate_sharpening_diff(pixels, blurred, sharpened, width, height, amount);
 
     // Copy the sharpened image back to the original array
     for (int i = 0; i < width * height; i++) {
