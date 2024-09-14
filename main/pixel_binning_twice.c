@@ -4,6 +4,8 @@
 #include "unsharp_masking.h"
 #include "denoising.h"
 #include "gamma_correction.h"
+#include "sobel_filter.h"
+
 
 void upscale_2x2(int* input, int width, int height, int* output) {
     for (int i = 0; i < height; i++) {
@@ -38,4 +40,6 @@ void upscale_2x2(int* input, int width, int height, int* output) {
 
     // Sharpening
     apply_unsharp_masking(output, width * 2, height * 2, 1.0, 1.5);
+
+    sharpen_image_with_sobel(output, width *2, height*2);
 }
