@@ -14,7 +14,9 @@ SOURCES = $(SRC_DIR)/pixel_binning_twice.c \
           $(SRC_DIR)/pixel_binning_quatro.c \
           $(SRC_DIR)/denoising.c \
           $(SRC_DIR)/gamma_correction.c \
-          $(SRC_DIR)/sobel_filter.c
+          $(SRC_DIR)/sobel_filter.c \
+          $(SRC_DIR)/adaptive_sharpening.c
+
 # Compiler dan opsi kompilasi
 CC = gcc
 CFLAGS = -shared -fPIC
