@@ -1,34 +1,35 @@
-Simple Pixel Binning Image Upscaling Library
-Project Overview
+# Simple Pixel Binning Image Upscaling Library
 
-The Simple Pixel Binning Image Upscaling Library is a Java-based project that uses native C code through Java Native Interface (JNI) to perform image upscaling. The library offers several image processing techniques, including pixel binning, Gaussian blur, smoothing, sharpening, and denoising. It is designed for high-performance image processing in Java or Android applications.
-Directory Structure
+## Project Overview
+
+The Simple Pixel Binning Image Upscaling Library is a Java-based project that uses native C code through Java Native Interface (JNI) to perform image upscaling. The library offers several image processing techniques, including pixel binning, Gaussian blur, smoothing, sharpening, denoising, gamma correction, and more. It is designed for high-performance image processing in Java or Android applications.
+
+## Directory Structure
 
 The project is organized into the following directories and files:
 
-graphql
-
+```
 simple_pixel-binning/
 │
 ├── include/
 │   ├── denoising.h            # Header file for denoising function declarations
-    ├── gamma_correction       # Header file for gamma correction function declarations
+│   ├── gamma_correction.h     # Header file for gamma correction function declarations
 │   ├── gaussian_blur.h        # Header file for Gaussian blur function declarations
 │   ├── pixel_binning.h        # Header file for pixel binning function declarations
 │   ├── pixel_binning_jni.h    # Header file for JNI bridge declarations
 │   ├── smoothing.h            # Header file for smoothing function declarations
-    ├── sobel_filter.h         # Header file for sobel filter function declarations
+│   ├── sobel_filter.h         # Header file for sobel filter function declarations
 │   └── unsharp_masking.h      # Header file for unsharp masking function declarations
 │
 ├── main/
 │   ├── denoising.c            # C file implementing denoising
-    ├── Gamma Correction.c     # C file implementing Gamma Correction
+│   ├── gamma_correction.c     # C file implementing gamma correction
 │   ├── gaussian_blur.c        # C file implementing Gaussian blur
 │   ├── pixel_binning_jni.c    # C file implementing JNI bridge functions
 │   ├── pixel_binning_twice.c  # C file implementing pixel binning with fixed 2x2 scaling
 │   ├── pixel_binning_quatro.c # C file implementing pixel binning with fixed 4x4 scaling
 │   ├── smoothing.c            # C file implementing smoothing
-    ├── sobel_filter.c         # C file implementing sobel filter
+│   ├── sobel_filter.c         # C file implementing sobel filter
 │   └── unsharp_masking.c      # C file implementing unsharp masking
 │
 ├── libpixel_binning.so        # Compiled native library (.so file)
@@ -36,7 +37,7 @@ simple_pixel-binning/
 └── project/
     ├── PixelBinning.java      # Java class to interface with native methods via JNI
     └── ImageExample.java      # Example Java program for upscaling images
-
+```
 
 ## Key Components
 
@@ -83,14 +84,21 @@ simple_pixel-binning/
    - Function: `apply_denoising(unsigned char* image, int width, int height, unsigned char* output)`
    - Purpose: Removes noise and smoothens the image.
 
-6. **JNI Integration (pixel_binning_jni.c)**
+6. **Gamma Correction (gamma_correction.c)**
+
+   Adjusts the gamma of the image to correct brightness levels.
+
+   - Function: `apply_gamma_correction(unsigned char* image, int width, int height, float gamma)`
+   - Purpose: Corrects the gamma of the image to adjust brightness and contrast.
+
+7. **JNI Integration (pixel_binning_jni.c)**
 
    Provides JNI bridge functions to interface Java with native C code.
 
    - Function: `Java_PixelBinning_upscale2x2(...)`
    - Purpose: Allows Java to call native methods for image processing.
 
-7. **Java Class (PixelBinning.java)**
+8. **Java Class (PixelBinning.java)**
 
    Java class for interacting with the native library and performing image upscaling.
 
@@ -102,63 +110,70 @@ simple_pixel-binning/
 
        public native void upscale2x2(int[] inputImage, int width, int height, int[] outputImage);
    }
+   ```
 
+9. **Example Program (ImageExample.java)**
 
-8. Example Program (ImageExample.java)
+   Demonstrates how to use the PixelBinning class to read, process, and save images.
 
-Demonstrates how to use the PixelBinning class to read, process, and save images.
-Build and Usage Instructions
-1. Compiling the Native Library
+## Build and Usage Instructions
 
-Use the provided Makefile to compile the C/C++ code into a shared library (libpixel_binning.so).
+1. **Compiling the Native Library**
 
-bash
+   Use the provided Makefile to compile the C/C++ code into a shared library (libpixel_binning.so).
 
-make
+   ```bash
+   make
+   ```
 
-2. Compiling the Java Code
+2. **Compiling the Java Code**
 
-Compile the Java files with:
+   Compile the Java files with:
 
-bash
+   ```bash
+   javac project/PixelBinning.java project/ImageExample.java
+   ```
 
-javac project/PixelBinning.java project/ImageExample.java
+3. **Running the Java Program**
 
-3. Running the Java Program
+   Run the example program with:
 
-Run the example program with:
+   ```bash
+   java -Djava.library.path=. project.ImageExample
+   ```
 
-bash
+   Ensure the shared library (libpixel_binning.so) is in the same directory or update the -Djava.library.path to point to the correct location.
 
-java -Djava.library.path=. project.ImageExample
+4. **Using the Library in Your Own Project**
 
-Ensure the shared library (libpixel_binning.so) is in the same directory or update the -Djava.library.path to point to the correct location.
-4. Using the Library in Your Own Project
+   To integrate the pixel binning functionality into your own project:
 
-To integrate the pixel binning functionality into your own project:
+   - Include the PixelBinning.java file in your project.
+   - Ensure libpixel_binning.so is in the runtime library path.
+   - Use the PixelBinning class to process images.
 
-    Include the PixelBinning.java file in your project.
-    Ensure libpixel_binning.so is in the runtime library path.
-    Use the PixelBinning class to process images.
+   Example usage:
 
-Example usage:
+   ```java
+   PixelBinning pb = new PixelBinning();
+   int[] inputImage = { /* your image data */ };
+   int[] outputImage = new int[scaledWidth * scaledHeight];
+   pb.upscale2x2(inputImage, originalWidth, originalHeight, outputImage);
+   ```
 
-java
+## Modifications and Customization
 
-PixelBinning pb = new PixelBinning();
-int[] inputImage = { /* your image data */ };
-int[] outputImage = new int[scaledWidth * scaledHeight];
-pb.upscale2x2(inputImage, originalWidth, originalHeight, outputImage);
+- **Upscaling with Different Scale Factors**
 
-Modifications and Customization
-Upscaling with Different Scale Factors
+  You can adjust the pixel_binning_twice.c and pixel_binning_quatro.c for different scaling factors as needed.
 
-You can adjust the pixel_binning_twice.c and pixel_binning_quatro.c for different scaling factors as needed.
-License
+## License
 
 This project is open-source under the MIT License.
-Future Enhancements
 
-    Support for additional interpolation algorithms (e.g., bilinear, bicubic).
-    GPU acceleration for faster processing.
-    Extended JNI interface for advanced image processing features.
+## Future Enhancements
+
+- Support for additional interpolation algorithms (e.g., bilinear, bicubic).
+- GPU acceleration for faster processing.
+- Extended JNI interface for advanced image processing features.
+```
