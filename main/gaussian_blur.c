@@ -2,14 +2,21 @@
 #include "denoising.h"
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
+#include <stdio.h> // Include this header for perror
 
-// Fungsi untuk membuat kernel Gaussian
+// Function to create Gaussian kernel
 void generate_gaussian_kernel(float **kernel, int *size, float sigma) {
     int ksize = (int)ceil(6 * sigma);
     if (ksize % 2 == 0) ksize++;
     *size = ksize;
 
     *kernel = (float*)malloc(ksize * ksize * sizeof(float));
+    if (*kernel == NULL) {
+        // Handle memory allocation failure
+        perror("Failed to allocate memory for Gaussian kernel");
+        exit(EXIT_FAILURE);
+    }
 
     float sum = 0.0f;
     int half = ksize / 2;
@@ -17,18 +24,19 @@ void generate_gaussian_kernel(float **kernel, int *size, float sigma) {
 
     for (int y = -half; y <= half; y++) {
         for (int x = -half; x <= half; x++) {
-            float value = expf(-(x*x + y*y) / (2 * s2)) / (M_PI * 2 * s2);
+            float value = expf(-(x * x + y * y) / (2 * s2)) / (M_PI * 2 * s2);
             (*kernel)[(y + half) * ksize + (x + half)] = value;
             sum += value;
         }
     }
 
+    // Normalize the kernel
     for (int i = 0; i < ksize * ksize; i++) {
         (*kernel)[i] /= sum;
     }
 }
 
-// Fungsi untuk menerapkan Gaussian blur
+// Function to apply Gaussian blur
 void apply_gaussian_blur(int* pixels, int width, int height, float sigma) {
     float* gaussian_kernel;
     int kernel_size;
@@ -36,7 +44,14 @@ void apply_gaussian_blur(int* pixels, int width, int height, float sigma) {
 
     int half = kernel_size / 2;
     int* temp = (int*)malloc(width * height * sizeof(int));
+    if (temp == NULL) {
+        // Handle memory allocation failure
+        perror("Failed to allocate memory for temporary pixel buffer");
+        free(gaussian_kernel);
+        exit(EXIT_FAILURE);
+    }
 
+    // Apply Gaussian blur
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             float sumRed = 0, sumGreen = 0, sumBlue = 0;
@@ -70,11 +85,8 @@ void apply_gaussian_blur(int* pixels, int width, int height, float sigma) {
         }
     }
 
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
-            pixels[y * width + x] = temp[y * width + x];
-        }
-    }
+    // Copy the result back to the original image
+    memcpy(pixels, temp, width * height * sizeof(int));
 
     free(temp);
     free(gaussian_kernel);
