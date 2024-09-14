@@ -18,7 +18,11 @@ void sort(int* arr, int n) {
 void apply_median_filter(int* pixels, int width, int height, int filter_size) {
     int half_size = filter_size / 2;
     int* output = (int*)malloc(width * height * sizeof(int));
-    
+    if (output == NULL) {
+        // Handle memory allocation failure
+        return;
+    }
+
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             int r[filter_size * filter_size];

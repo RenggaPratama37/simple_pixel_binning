@@ -1,4 +1,5 @@
 #include "gaussian_blur.h"
+#include "denoising.h"
 #include <stdlib.h>
 #include <math.h>
 
@@ -7,13 +8,13 @@ void generate_gaussian_kernel(float **kernel, int *size, float sigma) {
     int ksize = (int)ceil(6 * sigma);
     if (ksize % 2 == 0) ksize++;
     *size = ksize;
-    
+
     *kernel = (float*)malloc(ksize * ksize * sizeof(float));
 
     float sum = 0.0f;
     int half = ksize / 2;
     float s2 = sigma * sigma;
-    
+
     for (int y = -half; y <= half; y++) {
         for (int x = -half; x <= half; x++) {
             float value = expf(-(x*x + y*y) / (2 * s2)) / (M_PI * 2 * s2);
@@ -21,7 +22,7 @@ void generate_gaussian_kernel(float **kernel, int *size, float sigma) {
             sum += value;
         }
     }
-    
+
     for (int i = 0; i < ksize * ksize; i++) {
         (*kernel)[i] /= sum;
     }
@@ -32,7 +33,7 @@ void apply_gaussian_blur(int* pixels, int width, int height, float sigma) {
     float* gaussian_kernel;
     int kernel_size;
     generate_gaussian_kernel(&gaussian_kernel, &kernel_size, sigma);
-    
+
     int half = kernel_size / 2;
     int* temp = (int*)malloc(width * height * sizeof(int));
 
@@ -44,7 +45,7 @@ void apply_gaussian_blur(int* pixels, int width, int height, float sigma) {
                 for (int i = -half; i <= half; i++) {
                     int ny = y + j;
                     int nx = x + i;
-                    
+
                     if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
                         int neighborIndex = ny * width + nx;
                         int neighborPixel = pixels[neighborIndex];
@@ -77,4 +78,9 @@ void apply_gaussian_blur(int* pixels, int width, int height, float sigma) {
 
     free(temp);
     free(gaussian_kernel);
+}
+
+void apply_denoising_after_blur(int* pixels, int width, int height, float sigma, int filter_size) {
+    apply_gaussian_blur(pixels, width, height, sigma);
+    apply_median_filter(pixels, width, height, filter_size);
 }
