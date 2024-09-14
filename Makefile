@@ -6,16 +6,16 @@ SRC_DIR = main
 INCLUDE_DIR = include
 
 # File sumber C yang akan dikompilasi
-SOURCES = $(SRC_DIR)/pixel_binning_twice.c \
+SOURCES = $(SRC_DIR)/pixel_binning.c \
           $(SRC_DIR)/pixel_binning_jni.c \
           $(SRC_DIR)/gaussian_blur.c \
           $(SRC_DIR)/unsharp_masking.c \
           $(SRC_DIR)/smoothing.c \
-          $(SRC_DIR)/pixel_binning_quatro.c \
           $(SRC_DIR)/denoising.c \
           $(SRC_DIR)/gamma_correction.c \
           $(SRC_DIR)/sobel_filter.c \
-          $(SRC_DIR)/adaptive_sharpening.c
+          $(SRC_DIR)/adaptive_sharpening.c \
+          $(SRC_DIR)/feature_processing.c
 
 # Compiler dan opsi kompilasi
 CC = gcc
