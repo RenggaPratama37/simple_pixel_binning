@@ -12,19 +12,23 @@ simple_pixel-binning/
 │
 ├── include/
 │   ├── denoising.h            # Header file for denoising function declarations
+    ├── gamma_correction       # Header file for gamma correction function declarations
 │   ├── gaussian_blur.h        # Header file for Gaussian blur function declarations
 │   ├── pixel_binning.h        # Header file for pixel binning function declarations
 │   ├── pixel_binning_jni.h    # Header file for JNI bridge declarations
 │   ├── smoothing.h            # Header file for smoothing function declarations
-│   ├── unsharp_masking.h      # Header file for unsharp masking function declarations
+    ├── sobel_filter.h         # Header file for sobel filter function declarations
+│   └── unsharp_masking.h      # Header file for unsharp masking function declarations
 │
 ├── main/
 │   ├── denoising.c            # C file implementing denoising
+    ├── Gamma Correction.c     # C file implementing Gamma Correction
 │   ├── gaussian_blur.c        # C file implementing Gaussian blur
 │   ├── pixel_binning_jni.c    # C file implementing JNI bridge functions
 │   ├── pixel_binning_twice.c  # C file implementing pixel binning with fixed 2x2 scaling
 │   ├── pixel_binning_quatro.c # C file implementing pixel binning with fixed 4x4 scaling
 │   ├── smoothing.c            # C file implementing smoothing
+    ├── sobel_filter.c         # C file implementing sobel filter
 │   └── unsharp_masking.c      # C file implementing unsharp masking
 │
 ├── libpixel_binning.so        # Compiled native library (.so file)
@@ -33,67 +37,72 @@ simple_pixel-binning/
     ├── PixelBinning.java      # Java class to interface with native methods via JNI
     └── ImageExample.java      # Example Java program for upscaling images
 
-Key Components
-1. Pixel Binning Algorithm (pixel_binning_twice.c and pixel_binning_quatro.c)
 
-These modules implement pixel binning algorithms to upscale images. Pixel binning involves combining several pixels into one to reduce noise and improve image quality.
+## Key Components
 
-    pixel_binning_twice.c: Implements pixel binning with a fixed 2x2 scale.
-        Function: pixel_binning_twice(unsigned char* image, int width, int height, unsigned char* output)
-        Purpose: Upscales the image by a factor of 2x2.
+1. **Pixel Binning Algorithm (pixel_binning_twice.c and pixel_binning_quatro.c)**
 
-    pixel_binning_quatro.c: Implements pixel binning with a fixed 4x4 scale.
-        Function: pixel_binning_quatro(unsigned char* image, int width, int height, unsigned char* output)
-        Purpose: Upscales the image by a factor of 4x4.
+   These modules implement pixel binning algorithms to upscale images. Pixel binning involves combining several pixels into one to reduce noise and improve image quality.
 
-2. Gaussian Blur (gaussian_blur.c)
+   - `pixel_binning_twice.c`: Implements pixel binning with a fixed 2x2 scale.
+     - Function: `pixel_binning_twice(unsigned char* image, int width, int height, unsigned char* output)`
+     - Purpose: Upscales the image by a factor of 2x2.
 
-Applies Gaussian blur to the image to reduce noise and soften details.
+   - `pixel_binning_quatro.c`: Implements pixel binning with a fixed 4x4 scale.
+     - Function: `pixel_binning_quatro(unsigned char* image, int width, int height, unsigned char* output)`
+     - Purpose: Upscales the image by a factor of 4x4.
 
-    Function: apply_gaussian_blur(unsigned char* image, int width, int height, unsigned char* output)
-    Purpose: Smoothens the image by applying a Gaussian blur filter.
+2. **Gaussian Blur (gaussian_blur.c)**
 
-3. Smoothing (smoothing.c)
+   Applies Gaussian blur to the image to reduce noise and soften details.
 
-Smoothens color transitions between pixels to make the image appear more polished.
+   - Function: `apply_gaussian_blur(unsigned char* image, int width, int height, unsigned char* output)`
+   - Purpose: Smoothens the image by applying a Gaussian blur filter.
 
-    Function: apply_smoothing(unsigned char* image, int width, int height, unsigned char* output)
-    Purpose: Applies a smoothing filter to improve pixel transitions.
+3. **Smoothing (smoothing.c)**
 
-4. Sharpening (unsharp_masking.c)
+   Smoothens color transitions between pixels to make the image appear more polished.
 
-Enhances image sharpness and clarifies details using unsharp masking.
+   - Function: `apply_smoothing(unsigned char* image, int width, int height, unsigned char* output)`
+   - Purpose: Applies a smoothing filter to improve pixel transitions.
 
-    Function: apply_unsharp_masking(unsigned char* image, int width, int height, unsigned char* output)
-    Purpose: Sharpens the image and enhances edges.
+4. **Sharpening (unsharp_masking.c and sobel_filter.c)**
 
-5. Denoising (denoising.c)
+   - Enhances image sharpness and clarifies details using unsharp masking.
+     - Function: `apply_unsharp_masking(unsigned char* image, int width, int height, unsigned char* output)`
+     - Purpose: Sharpens the image and enhances edges.
 
-Reduces noise in the image using a denoising filter.
+   - Performs edge detection and sharpening using the Sobel filter.
+     - Function: `apply_sobel_filter(unsigned char* image, int width, int height, unsigned char* output)`
+     - Purpose: Detects edges and enhances sharpness for clearer image details.
 
-    Function: apply_denoising(unsigned char* image, int width, int height, unsigned char* output)
-    Purpose: Removes noise and smoothens the image.
+5. **Denoising (denoising.c)**
 
-6. JNI Integration (pixel_binning_jni.c)
+   Reduces noise in the image using a denoising filter.
 
-Provides JNI bridge functions to interface Java with native C code.
+   - Function: `apply_denoising(unsigned char* image, int width, int height, unsigned char* output)`
+   - Purpose: Removes noise and smoothens the image.
 
-    Function: Java_PixelBinning_upscale2x2(...)
-    Purpose: Allows Java to call native methods for image processing.
+6. **JNI Integration (pixel_binning_jni.c)**
 
-7. Java Class (PixelBinning.java)
+   Provides JNI bridge functions to interface Java with native C code.
 
-Java class for interacting with the native library and performing image upscaling.
+   - Function: `Java_PixelBinning_upscale2x2(...)`
+   - Purpose: Allows Java to call native methods for image processing.
 
-java
+7. **Java Class (PixelBinning.java)**
 
-public class PixelBinning {
-    static {
-        System.loadLibrary("pixel_binning");
-    }
+   Java class for interacting with the native library and performing image upscaling.
 
-    public native void upscale2x2(int[] inputImage, int width, int height, int[] outputImage);
-}
+   ```java
+   public class PixelBinning {
+       static {
+           System.loadLibrary("pixel_binning");
+       }
+
+       public native void upscale2x2(int[] inputImage, int width, int height, int[] outputImage);
+   }
+
 
 8. Example Program (ImageExample.java)
 
