@@ -6,6 +6,7 @@
 #include "gamma_correction.h"
 #include "sobel_filter.h"
 #include "adaptive_sharpening.h"
+#include "supersampling.h"
 
 // Fungsi untuk menerapkan fitur setelah upscaling
 void apply_features_after_upscale(int* image, int width, int height) {
@@ -29,4 +30,7 @@ void apply_features_after_upscale(int* image, int width, int height) {
 
     // Adaptive Sharpening
     apply_adaptive_sharpening(image, width, height, 1.0f, 3);
+
+    //Super sampling anti-aliasing
+    apply_supersampling(image, width, height, 1.0f);
 }

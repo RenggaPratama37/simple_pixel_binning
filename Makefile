@@ -15,7 +15,8 @@ SOURCES = $(SRC_DIR)/pixel_binning.c \
           $(SRC_DIR)/gamma_correction.c \
           $(SRC_DIR)/sobel_filter.c \
           $(SRC_DIR)/adaptive_sharpening.c \
-          $(SRC_DIR)/feature_processing.c
+          $(SRC_DIR)/feature_processing.c \
+          $(SRC_DIR)/supersampling.c
 
 # Compiler dan opsi kompilasi
 CC = gcc
