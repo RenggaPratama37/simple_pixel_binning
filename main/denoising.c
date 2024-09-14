@@ -2,17 +2,9 @@
 #include <stdlib.h>
 #include <math.h>
 
-// Helper function to sort array
-void sort(int* arr, int n) {
-    for (int i = 0; i < n-1; i++) {
-        for (int j = i+1; j < n; j++) {
-            if (arr[i] > arr[j]) {
-                int temp = arr[i];
-                arr[i] = arr[j];
-                arr[j] = temp;
-            }
-        }
-    }
+// Comparator function for qsort
+int compare_int(const void* a, const void* b) {
+    return (*(int*)a - *(int*)b);
 }
 
 void apply_median_filter(int* pixels, int width, int height, int filter_size) {
@@ -37,22 +29,25 @@ void apply_median_filter(int* pixels, int width, int height, int filter_size) {
                     int newX = x + kx;
 
                     // Boundary check
-                    if (newY >= 0 && newY < height && newX >= 0 && newX < width) {
-                        int pixel = pixels[newY * width + newX];
+                    if (newY < 0) newY = 0;
+                    if (newY >= height) newY = height - 1;
+                    if (newX < 0) newX = 0;
+                    if (newX >= width) newX = width - 1;
 
-                        r[count] = (pixel >> 16) & 0xFF;
-                        g[count] = (pixel >> 8) & 0xFF;
-                        b[count] = pixel & 0xFF;
+                    int pixel = pixels[newY * width + newX];
 
-                        count++;
-                    }
+                    r[count] = (pixel >> 16) & 0xFF;
+                    g[count] = (pixel >> 8) & 0xFF;
+                    b[count] = pixel & 0xFF;
+
+                    count++;
                 }
             }
 
             // Sort the color arrays to find the median
-            sort(r, count);
-            sort(g, count);
-            sort(b, count);
+            qsort(r, count, sizeof(int), compare_int);
+            qsort(g, count, sizeof(int), compare_int);
+            qsort(b, count, sizeof(int), compare_int);
 
             // Set the pixel to the median value of the surrounding pixels
             int medianRed = r[count / 2];
