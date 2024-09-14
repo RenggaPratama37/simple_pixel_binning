@@ -3,7 +3,7 @@
 #include <math.h>
 
 // Faktor peningkatan untuk penajaman
-#define SHARPENING_FACTOR 0.30f
+#define SHARPENING_FACTOR 0.40f
 
 void apply_sobel_filter(int* pixels, int width, int height) {
     int* temp = (int*)malloc(width * height * sizeof(int));
