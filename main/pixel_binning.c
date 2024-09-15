@@ -1,154 +1,78 @@
 #include "pixel_binning.h"
 #include "feature_processing.h"
 #include <math.h>
+#include <stdio.h>
 
+// Helper function to clamp values between 0 and 255
+static inline int clamp(int value) {
+    return value < 0 ? 0 : (value > 255 ? 255 : value);
+}
+
+// Function to perform bilinear interpolation for one pixel
+static inline void bilinear_interpolation(int* input, int width, int height, int x, int y, int newWidth, int newHeight, int* output) {
+    // Determine the coordinates of the four surrounding pixels in the input image
+    int x0 = x / 2;
+    int y0 = y / 2;
+    int x1 = x0 + 1;
+    int y1 = y0 + 1;
+
+    // Ensure coordinates are within bounds
+    if (x1 >= width) x1 = x0;
+    if (y1 >= height) y1 = y0;
+
+    // Retrieve the four surrounding pixel values
+    int p00 = input[y0 * width + x0];
+    int p10 = input[y0 * width + x1];
+    int p01 = input[y1 * width + x0];
+    int p11 = input[y1 * width + x1];
+
+    // Extract RGB components for each pixel
+    int r00 = (p00 >> 16) & 0xFF;
+    int g00 = (p00 >> 8) & 0xFF;
+    int b00 = p00 & 0xFF;
+
+    int r10 = (p10 >> 16) & 0xFF;
+    int g10 = (p10 >> 8) & 0xFF;
+    int b10 = p10 & 0xFF;
+
+    int r01 = (p01 >> 16) & 0xFF;
+    int g01 = (p01 >> 8) & 0xFF;
+    int b01 = p01 & 0xFF;
+
+    int r11 = (p11 >> 16) & 0xFF;
+    int g11 = (p11 >> 8) & 0xFF;
+    int b11 = p11 & 0xFF;
+
+    // Calculate fractional part of the coordinates
+    float dx = (x % 2) / 1.0f;
+    float dy = (y % 2) / 1.0f;
+
+    // Perform bilinear interpolation for each color component
+    float r = r00 * (1 - dx) * (1 - dy) + r10 * dx * (1 - dy) + r01 * (1 - dx) * dy + r11 * dx * dy;
+    float g = g00 * (1 - dx) * (1 - dy) + g10 * dx * (1 - dy) + g01 * (1 - dx) * dy + g11 * dx * dy;
+    float b = b00 * (1 - dx) * (1 - dy) + b10 * dx * (1 - dy) + b01 * (1 - dx) * dy + b11 * dx * dy;
+
+    // Clamp values to ensure they are within 0-255 range
+    int new_r = clamp((int)r);
+    int new_g = clamp((int)g);
+    int new_b = clamp((int)b);
+
+    // Combine RGB components into a single pixel value
+    int new_pixel = (new_r << 16) | (new_g << 8) | new_b;
+
+    // Store the new pixel value in the output image
+    output[y * newWidth + x] = new_pixel;
+}
+
+// Function to upscale the image by a factor of 2x2
 void upscale_2x2(int* input, int width, int height, int* output) {
     int newWidth = width * 2;
     int newHeight = height * 2;
 
-    for (int i = 0; i < height - 1; i++) {
-        for (int j = 0; j < width - 1; j++) {
-            // Pixel position in the output image
-            int x = j * 2;
-            int y = i * 2;
-            
-            // Get input pixel colors
-            int p1 = input[i * width + j];
-            int p2 = input[i * width + (j + 1)];
-            int p3 = input[(i + 1) * width + j];
-            int p4 = input[(i + 1) * width + (j + 1)];
-            
-            // Separate color components (RGB)
-            int r1 = (p1 >> 16) & 0xFF;
-            int g1 = (p1 >> 8) & 0xFF;
-            int b1 = p1 & 0xFF;
-            
-            int r2 = (p2 >> 16) & 0xFF;
-            int g2 = (p2 >> 8) & 0xFF;
-            int b2 = p2 & 0xFF;
-            
-            int r3 = (p3 >> 16) & 0xFF;
-            int g3 = (p3 >> 8) & 0xFF;
-            int b3 = p3 & 0xFF;
-            
-            int r4 = (p4 >> 16) & 0xFF;
-            int g4 = (p4 >> 8) & 0xFF;
-            int b4 = p4 & 0xFF;
-            
-            // Bilinear interpolation for each new pixel
-            for (int dy = 0; dy < 2; dy++) {
-                for (int dx = 0; dx < 2; dx++) {
-                    float wx = dx / 1.0f;
-                    float wy = dy / 1.0f;
-
-                    float r = r1 * (1 - wx) * (1 - wy) + r2 * wx * (1 - wy) + r3 * (1 - wx) * wy + r4 * wx * wy;
-                    float g = g1 * (1 - wx) * (1 - wy) + g2 * wx * (1 - wy) + g3 * (1 - wx) * wy + g4 * wx * wy;
-                    float b = b1 * (1 - wx) * (1 - wy) + b2 * wx * (1 - wy) + b3 * (1 - wx) * wy + b4 * wx * wy;
-
-                    int new_r = (int)r;
-                    int new_g = (int)g;
-                    int new_b = (int)b;
-
-                    int new_pixel = (new_r << 16) | (new_g << 8) | new_b;
-                    output[(y + dy) * newWidth + (x + dx)] = new_pixel;
-                }
-            }
-        }
-    }
-
-    // Handle image edge cases
-    for (int i = 0; i < height; i++) {
-        if (i < height - 1) {
-            for (int j = 0; j < width; j++) {
-                int x = j * 2;
-                int y = i * 2 + 1;
-
-                int p1 = input[i * width + j];
-                int p2 = input[(i + 1) * width + j];
-
-                int r1 = (p1 >> 16) & 0xFF;
-                int g1 = (p1 >> 8) & 0xFF;
-                int b1 = p1 & 0xFF;
-                
-                int r2 = (p2 >> 16) & 0xFF;
-                int g2 = (p2 >> 8) & 0xFF;
-                int b2 = p2 & 0xFF;
-
-                for (int dx = 0; dx < 2; dx++) {
-                    int new_r = (r1 + r2) / 2;
-                    int new_g = (g1 + g2) / 2;
-                    int new_b = (b1 + b2) / 2;
-
-                    int new_pixel = (new_r << 16) | (new_g << 8) | new_b;
-                    output[y * newWidth + (x + dx)] = new_pixel;
-                }
-            }
-        }
-    }
-
-    for (int j = 0; j < width; j++) {
-        if (j < width - 1) {
-            for (int i = 0; i < height; i++) {
-                int x = j * 2 + 1;
-                int y = i * 2;
-
-                int p1 = input[i * width + j];
-                int p2 = input[i * width + (j + 1)];
-
-                int r1 = (p1 >> 16) & 0xFF;
-                int g1 = (p1 >> 8) & 0xFF;
-                int b1 = p1 & 0xFF;
-                
-                int r2 = (p2 >> 16) & 0xFF;
-                int g2 = (p2 >> 8) & 0xFF;
-                int b2 = p2 & 0xFF;
-
-                for (int dy = 0; dy < 2; dy++) {
-                    int new_r = (r1 + r2) / 2;
-                    int new_g = (g1 + g2) / 2;
-                    int new_b = (b1 + b2) / 2;
-
-                    int new_pixel = (new_r << 16) | (new_g << 8) | new_b;
-                    output[(y + dy) * newWidth + x] = new_pixel;
-                }
-            }
-        }
-    }
-
-    // Handle image corners
-    for (int i = 0; i < height; i++) {
-        for (int j = 0; j < width; j++) {
-            if (i == height - 1 && j == width - 1) {
-                int x = j * 2;
-                int y = i * 2;
-
-                int p1 = input[i * width + j];
-                int r1 = (p1 >> 16) & 0xFF;
-                int g1 = (p1 >> 8) & 0xFF;
-                int b1 = p1 & 0xFF;
-
-                int new_pixel = (r1 << 16) | (g1 << 8) | b1;
-                output[y * newWidth + x] = new_pixel;
-                output[(y + 1) * newWidth + x] = new_pixel;
-                output[y * newWidth + (x + 1)] = new_pixel;
-                output[(y + 1) * newWidth + (x + 1)] = new_pixel;
-            }
-        }
-    }
-}
-
-// upscaling 4*4
-void upscale_4x4(int* input, int width, int height, int* output) {
-    for (int i = 0; i < height; i++) {
-        for (int j = 0; j < width; j++) {
-            int pixel = input[i * width + j];
-
-            // Upscale 4x4: duplicate the pixel into 16
-            for (int y = 0; y < 4; y++) {
-                for (int x = 0; x < 4; x++) {
-                    output[(i * 4 + y) * (width * 4) + (j * 4 + x)] = pixel;
-                }
-            }
+    // Perform bilinear interpolation for each pixel in the output image
+    for (int y = 0; y < newHeight; y++) {
+        for (int x = 0; x < newWidth; x++) {
+            bilinear_interpolation(input, width, height, x, y, newWidth, newHeight, output);
         }
     }
 }
@@ -161,3 +85,4 @@ void process_image(int* input, int width, int height, int* output) {
     // Apply feature 
     apply_features_after_upscale(output, width * 2, height * 2);
 }
+
